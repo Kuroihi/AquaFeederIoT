@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatic Fish Feeder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Automatic Fish Feeder</h1>
+    </header>
+    
+    <main>
+        <section id="sensor-data">
+            <h2>Food Storage</h2>
+            <div class="gauge">
+                <div class="gauge-fill" id="gauge-fill" style="width: {{ food_percentage }}%;"></div>
+            </div>
+            <p>Current: <span id="food-percentage">{{ food_percentage }}</span>%</p>
+            <p>Buzzer Threshold: <span id="buzzer-threshold">{{ buzzer_threshold }}</span>%</p>
+            <p>Buzzer Status: <span id="buzzer-status">{{ buzzer_status }}</span></p>
+            <p>Feed Status: <span id="feed-status">{{ feed_status }}</span></p>
+        </section>
+        
+        <section id="controls">
+            <h2>Controls</h2>
+            <div>
+                <label for="threshold">Set Buzzer Threshold (%):</label>
+                <input type="number" id="threshold" min="0" max="100" value="{{ buzzer_threshold }}">
+                <button onclick="setThreshold()">Set</button>
+            </div>
+            <div>
+                <button id="buzzer-btn" onclick="toggleBuzzer()">
+                    {{ 'Turn Off Buzzer' if buzzer_status == 'on' else 'Turn On Buzzer' }}
+                </button>
+            </div>
+            <div>
+                <button id="feed-now-btn" onclick="feedNow()">Feed Now</button>
+            </div>
+        </section>
+        
+        <section id="schedule">
+            <h2>Feeding Schedule</h2>
+            <div>
+                <label for="schedule-time">Add feeding time (HH:MM):</label>
+                <input type="time" id="schedule-time">
+                <button onclick="addSchedule()">Add</button>
+            </div>
+            <ul id="schedule-list">
+                {% for schedule in schedules %}
+                    <li>
+                        <input type="checkbox" id="schedule-{{ loop.index }}" 
+                               {{ 'checked' if schedule.active else '' }}
+                               onchange="toggleSchedule('{{ schedule.time }}')">
+                        <label for="schedule-{{ loop.index }}">{{ schedule.time }}</label>
+                        <button onclick="removeSchedule('{{ schedule.time }}')">Remove</button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+        
+        <section id="chart">
+            <h2>Food Percentage History</h2>
+            <canvas id="sensor-chart"></canvas>
+        </section>
+    </main>
+    
+    <script>
+        // Initialize chart
+        var ctx = document.getElementById('sensor-chart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [{% for data in sensor_data %}"{{ data.time }}",{% endfor %}],
+                datasets: [{
+                    label: 'Food Percentage',
+                    data: [{% for data in sensor_data %}{{ data.value }},{% endfor %}],
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+        
+        // Update functions
+        function setThreshold() {
+            var threshold = document.getElementById('threshold').value;
+            $.post('/set_threshold', JSON.stringify({threshold: threshold}), function(response) {
+                if (response.status === 'success') {
+                    document.getElementById('buzzer-threshold').innerText = threshold;
+                }
+            });
+        }
+        
+        function toggleBuzzer() {
+            $.post('/toggle_buzzer', function(response) {
+                if (response.status === 'success') {
+                    var newStatus = response.buzzer_status;
+                    document.getElementById('buzzer-status').innerText = newStatus;
+                    document.getElementById('buzzer-btn').innerText = 
+                        newStatus === 'on' ? 'Turn Off Buzzer' : 'Turn On Buzzer';
+                }
+            });
+        }
+        
+        function feedNow() {
+            $.post('/feed_now', function(response) {
+                if (response.status === 'success') {
+                    document.getElementById('feed-status').innerText = 'on';
+                    setTimeout(() => {
+                        document.getElementById('feed-status').innerText = 'off';
+                    }, 5000);
+                }
+            });
+        }
+        
+        function addSchedule() {
+            var time = document.getElementById('schedule-time').value;
+            if (!time) return;
+            
+            // Format to HH:MM
+            var parts = time.split(':');
+            var formattedTime = parts[0] + ':' + parts[1];
+            
+            // Add to schedules
+            $.post('/set_schedule', JSON.stringify({
+                schedules: [...schedules, {time: formattedTime, active: true}]
+            }), function(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                }
+            });
+        }
+        
+        function removeSchedule(time) {
+            var newSchedules = schedules.filter(s => s.time !== time);
+            $.post('/set_schedule', JSON.stringify({schedules: newSchedules}), function(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                }
+            });
+        }
+        
+        function toggleSchedule(time) {
+            var newSchedules = schedules.map(s => {
+                if (s.time === time) {
+                    return {...s, active: !s.active};
+                }
+                return s;
+            });
+            $.post('/set_schedule', JSON.stringify({schedules: newSchedules}), function(response) {
+                if (response.status === 'success') {
+                    console.log('Schedule updated');
+                }
+            });
+        }
+        
+        // Auto-update data
+        setInterval(() => {
+            $.get('/?partial=1', function(data) {
+                // Update food percentage
+                var newPercentage = data.food_percentage;
+                document.getElementById('food-percentage').innerText = newPercentage;
+                document.getElementById('gauge-fill').style.width = newPercentage + '%';
+                
+                // Update chart
+                chart.data.labels = data.sensor_data.map(d => d.time);
+                chart.data.datasets[0].data = data.sensor_data.map(d => d.value);
+                chart.update();
+            });
+        }, 30000);  // Update every 30 seconds
+    </script>
+</body>
+</html>
