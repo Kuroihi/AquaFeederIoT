@@ -69,15 +69,19 @@
     </main>
     
     <script>
+        // Inisialisasi variabel dari server
+        var schedules = {{ schedules|tojson }};
+        var sensor_data = {{ sensor_data|tojson }};
+
         // Initialize chart
         var ctx = document.getElementById('sensor-chart').getContext('2d');
         var chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: [{% for data in sensor_data %}"{{ data.time }}",{% endfor %}],
+                labels: sensor_data.map(d => d.time),
                 datasets: [{
                     label: 'Food Percentage',
-                    data: [{% for data in sensor_data %}{{ data.value }},{% endfor %}],
+                    data: sensor_data.map(d => d.value),
                     borderColor: 'blue',
                     fill: false
                 }]
@@ -127,12 +131,8 @@
         function addSchedule() {
             var time = document.getElementById('schedule-time').value;
             if (!time) return;
-            
-            // Format to HH:MM
             var parts = time.split(':');
             var formattedTime = parts[0] + ':' + parts[1];
-            
-            // Add to schedules
             $.post('/set_schedule', JSON.stringify({
                 schedules: [...schedules, {time: formattedTime, active: true}]
             }), function(response) {
@@ -165,20 +165,18 @@
             });
         }
         
-        // Auto-update data
+        // Auto-update data every 30 detik
         setInterval(() => {
             $.get('/?partial=1', function(data) {
-                // Update food percentage
                 var newPercentage = data.food_percentage;
                 document.getElementById('food-percentage').innerText = newPercentage;
                 document.getElementById('gauge-fill').style.width = newPercentage + '%';
                 
-                // Update chart
                 chart.data.labels = data.sensor_data.map(d => d.time);
                 chart.data.datasets[0].data = data.sensor_data.map(d => d.value);
                 chart.update();
             });
-        }, 30000);  // Update every 30 seconds
+        }, 30000);
     </script>
 </body>
 </html>
