@@ -5,34 +5,38 @@ A web-based IoT system to monitor food levels and automate fish feeding. The pro
 Overview
 
 This system solves the problem of manual fish feeding by allowing users to:
-  Monitor Feed Levels: Uses an ultrasonic sensor to calculate remaining feed percentage.
-  Schedule Feeding: Users can set daily feeding times via a web interface.
-  Remote Trigger: Manual "Feed Now" button available from the dashboard.
-  Alerts: Local buzzer alarm on the device when feed is low.
+    
+    Monitor Feed Levels: Uses an ultrasonic sensor to calculate remaining feed percentage.
+    Schedule Feeding: Users can set daily feeding times via a web interface.
+    Remote Trigger: Manual "Feed Now" button available from the dashboard.
+    Alerts: Local buzzer alarm on the device when feed is low.
 
 Tech Stack
-  Hardware: ESP32 (Dev Board), HC-SR04 Ultrasonic Sensor, Servo Motor (SG90/MG996R), Active Buzzer.
-  Firmware: C/C++ (Arduino IDE).
-  Backend: Python (Flask), Gunicorn.
-  Frontend: HTML5, CSS3, JavaScript (jQuery, Chart.js).
-  Infrastructure: Google Cloud Platform (Compute Engine VM).
+    
+    Hardware: ESP32 (Dev Board), HC-SR04 Ultrasonic Sensor, Servo Motor (SG90/MG996R), Active Buzzer.
+    Firmware: C/C++ (Arduino IDE).
+    Backend: Python (Flask), Gunicorn.
+    Frontend: HTML5, CSS3, JavaScript (jQuery, Chart.js).
+    Infrastructure: Google Cloud Platform (Compute Engine VM).
 
 Hardware Configuration
 
 Bill of Materials
-  ESP32 Development Board
-  Standard Servo Motor
-  HC-SR04 Ultrasonic Sensor
-  Buzzer
-  Jumper Wires & Power Supply (5V)
+
+    ESP32 Development Board
+    Standard Servo Motor
+    HC-SR04 Ultrasonic Sensor
+    Buzzer
+    Jumper Wires & Power Supply (5V)
 
 Pinout
-  Mapping based on AqufeederIoTFINAL.ino:
-  Component	ESP32 GPIO
-  Ultrasonic Trig	5
-  Ultrasonic Echo	18
-  Servo Signal	13
-  Buzzer	25
+
+    Mapping based on AqufeederIoTFINAL.ino:
+    Component	ESP32 GPIO
+    Ultrasonic Trig	5
+    Ultrasonic Echo	18
+    Servo Signal	13
+    Buzzer	25
 
 Setup & Deployment
 
