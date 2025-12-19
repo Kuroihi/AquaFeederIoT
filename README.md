@@ -38,15 +38,10 @@ Setup & Deployment
 
 1. Backend (Google Cloud VM)
    The backend runs on a GCP Compute Engine instance (Ubuntu/Debian).
-     # Clone the repo
      git clone https://github.com/Kuroihi/AquaFeederIoT
      cd fish-feeder-iot
-     # Install dependencies
      pip3 install -r requirements.txt
-     # Run the server
-     # For development:
      python3 app.py
-     # For production (using Gunicorn):
      gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
 Network Note: Ensure you have configured the GCP Firewall rules to allow TCP traffic on port 5000 (or whichever port you choose) so the ESP32 can reach the API.
