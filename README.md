@@ -32,21 +32,22 @@ Bill of Materials
 Pinout
 
     Mapping based on AqufeederIoTFINAL.ino:
-    Component	ESP32 GPIO
-    Ultrasonic Trig	5
-    Ultrasonic Echo	18
-    Servo Signal	13
-    Buzzer	25
+        Component	ESP32 GPIO
+        Ultrasonic Trig	5
+        Ultrasonic Echo	18
+        Servo Signal	13
+        Buzzer	25
 
 Setup & Deployment
 
 1. Backend (Google Cloud VM)
    The backend runs on a GCP Compute Engine instance (Ubuntu/Debian).
-     git clone https://github.com/Kuroihi/AquaFeederIoT
-     cd fish-feeder-iot
-     pip3 install -r requirements.txt
-     python3 app.py
-     gunicorn -w 4 -b 0.0.0.0:5000 app:app
+   
+         git clone https://github.com/Kuroihi/AquaFeederIoT
+         cd fish-feeder-iot
+         pip3 install -r requirements.txt
+         python3 app.py
+         gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
 Network Note: Ensure you have configured the GCP Firewall rules to allow TCP traffic on port 5000 (or whichever port you choose) so the ESP32 can reach the API.
 
@@ -54,14 +55,16 @@ Network Note: Ensure you have configured the GCP Firewall rules to allow TCP tra
     Open AqufeederIoTFINAL.ino in Arduino IDE.
     Install required libraries: ArduinoJson, ESP32Servo, HTTPClient.
     Update the credentials and server endpoint:
-      const char* ssid = "YOUR_WIFI_SSID";
-      const char* password = "YOUR_WIFI_PASSWORD";
-      const char* serverUrl = "http://YOUR_GCP_EXTERNAL_IP:5000/";
+
+       const char* ssid = "YOUR_WIFI_SSID";
+       const char* password = "YOUR_WIFI_PASSWORD";
+       const char* serverUrl = "http://YOUR_GCP_EXTERNAL_IP:5000/";
     Calibration: Adjust tankHeight (cm) in the code to match your physical container size. Upload to the board.
 
 API Reference
 
 Communication between ESP32 and Flask is done via HTTP polling.
+    
     POST /update_sensor: Updates food percentage (JSON payload).
     GET /get_control: Checks for pending actions (Feed/Buzzer toggle).
     POST /set_schedule: Appends new schedule time.
